@@ -9,6 +9,7 @@ from rich.table import Table
 from rich.prompt import Prompt
 import math
 from math import pi
+
 table_columns = ["ID", "Gas", "Description", "Molecular mass (u)", "ISP (s)", "Density at 0 C° and 2.41e+7 Pa (g/cm^3)"]
 table_column_kwargs = {"justify": "center", "vertical": "middle"}
 
