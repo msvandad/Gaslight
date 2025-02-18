@@ -1,3 +1,9 @@
+# /// script
+# requires-python = ">=3.12"
+# dependencies = [
+#     "rich",
+# ]
+# ///
 from rich.console import Console
 from rich.table import Table
 from rich.prompt import Prompt
