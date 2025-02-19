@@ -19,7 +19,13 @@ pip install -r requirements.txt
 
 ## Usage
 
-Run the script using Python:
+Run the script using Python or `uv`:
+
+```bash
+uv run gaslight.py
+```
+
+Or, you can use the traditional Python command:
 
 ```bash
 python gaslight.py
