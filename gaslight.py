@@ -4,10 +4,12 @@
 #     "rich",
 # ]
 # ///
+from unittest import skip
 from rich.console import Console
 from rich.table import Table
 from rich.prompt import Prompt
 import math
+import csv
 from math import pi
 
 table_columns = ["ID", "Gas", "Description", "Molecular mass (u)", "ISP (s)", "Density at 0 C° and 2.41e+7 Pa (g/cm^3)"]
@@ -20,7 +22,8 @@ gas_table = [["G-H2", "Hydrogen", "2.0", "272", "0.02"],
     ["G-Kr", "Krypton", "83.8", "37", "1.08"],
     ["G-Xe", "Xenon", "131.3", "31", "1.89"],
     ["G-CO2", "Carbon Dioxide", "44.0", "61", "Liquid"],
-    ["G-N2", "Nitrogen", "28.0", "73", "0.28"]]
+    ["G-N2", "Nitrogen", "28.0", "73", "0.28"],
+    ["G-Air", "Air", "N/A", "N/A", "N/A", "0.289"]]
 
 gas_properties = {
     "G-H2": [4124, 1.41],
@@ -30,7 +33,8 @@ gas_properties = {
     "G-Kr": [125.0, 1.68],
     "G-Xe": [64.2, 1.66],
     "G-CO2": [188.9, 1.30],
-    "G-N2": [296.8, 1.40] } # gas, specific gas constant J/kg·K, heat capacity ratio
+    "G-N2": [296.8, 1.40],
+    "G-Air": [1005, 1.40] } # gas, specific gas constant J/kg·K, heat capacity ratio
 
 class gaslight:
     def __init__(self):
@@ -88,30 +92,99 @@ class gaslight:
         exit_area = throat_area * t2 * t3
         exit_radius = math.sqrt(exit_area / pi)
 
-        nozzle_dimensions = (throat_radius, exit_radius)
-    
-        self.console.print(f"Throat radius: {nozzle_dimensions[0]} m")
-        self.console.print(f"Exit radius: {nozzle_dimensions[1]} m")
-        return nozzle_dimensions
-    
+        self.nozzle_dimensions = (throat_radius, exit_radius)
+        return self.nozzle_dimensions
+
+    def generate_nozzle_geometry(self, chamber_radius):
+        nozzle_dimensions = self.nozzle_dimensions
+        throat_radius = nozzle_dimensions[0]
+        exit_radius = nozzle_dimensions[1]
+        chamber_length  = 3.2 * chamber_radius
+        convergance_angle = 0.3490658504 # rads
+        convergance_length = (exit_radius - throat_radius) / math.tan(convergance_angle)
+        divergance_angle = 0.2617993878 # rads
+        divergence_length = (exit_radius - throat_radius) / math.tan(divergance_angle)
+
+        with open('nozzel_geometry.csv', 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow([0, 0])
+            writer.writerow([chamber_radius, 0])
+            writer.writerow([chamber_radius, (-1 * chamber_length)])
+            writer.writerow([throat_radius, (-chamber_length - convergance_length)])
+            writer.writerow([exit_radius, (-chamber_length - convergance_length - divergence_length)])
+            writer.writerow([0, (-1 * chamber_length - convergance_length - divergence_length)])
+
+            
+
+        print(f"""           
+                   +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ |
+                   ++                                                           ++ |                            
+                   ++                                                           ++ |                            
+                   ++                                                           ++ |                            
+                   ++                                                           ++ |                            
+                   ++                                                           ++ |                            
+                   ++                                                           ++ |                            
+                   ++ ----chamber radius {chamber_radius:19} meters------------ ++ |                            
+                   ++                                                           ++ |                            
+                   ++                                                           ++ | chamber length = {chamber_length} meters                           
+                   ++                                                           ++ |                            
+                   ++                                                           ++ |                            
+                   ++                                                           ++ |                            
+                   ++                                                           ++ |                            
+                   ++                                                           ++ |                            
+                   ++                                                           ++ |                            
+                   ++                                                           ++ |                            
+                   ++                                                           ++ |                            
+                   ++                                                           ++ |                            
+                   ++                                                           ++ |                            
+                   ++                                                          ++  ||                           
+                   ++                                                         ++   ||                           
+                   ++                                                        ++    ||                           
+                   ++                                                       ++     ||                           
+                   ++                                                      ++      ||                           
+                   ++                                                     ++       ||                           
+                   ++                                                    ++        || conv length = {convergance_length} meters                            
+                   ++                                                   ++         ||                           
+                   ++                                                  ++          ||                           
+                   ++                                                 ++           ||                           
+                   ++                                                ++            ||                           
+                   ++                                               ++             ||                           
+                   ++ -throat radius {throat_radius:18} meters- ++              ||                           
+                   ++                                               ++             |||                           
+                   ++                                                ++            |||                           
+                   ++                                                 ++           |||                           
+                   ++                                                  ++          |||                           
+                   ++                                                   ++         ||| dive length = {divergence_length} meters                           
+                   ++                                                    ++        |||                           
+                   ++                                                     ++       |||                           
+                   ++                                                      ++      |||                           
+                   ++                                                       ++     |||                           
+                   ++ --exit radius {exit_radius:16} meters------------- ++    |||                           
+                   ++                                                         ++   |||                           
+                   ++                                                          ++  |||                           
+                    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++""")
+        
+
+
+        
 
 if __name__ == "__main__":
     g = gaslight()
 
     prompt = Prompt.ask("Enter the desired thrust in newtons")
     desired_thrust = float(prompt)
-    print("desired_thrust:", desired_thrust)
 
     prompt = Prompt.ask("Enter the chamber pressure in pascals")
     chamber_pressure = float(prompt)
-    print("chamber_pressure:", chamber_pressure)
 
     prompt = Prompt.ask("Enter the chamber temperature in Kelvin")
     chamber_temperature = float(prompt)
-    print("chamber_temperature:", chamber_temperature)
 
     prompt = Prompt.ask("Enter the environment pressure in pascals")
     environment_pressure = float(prompt)
-    print("environment_pressure:", environment_pressure)
 
-    nozzle_dimensions = g.calulate_nozzle_dimension(desired_thrust, chamber_pressure, chamber_temperature, environment_pressure)
+    g.calulate_nozzle_dimension(desired_thrust, chamber_pressure, chamber_temperature, environment_pressure)
+
+    prompt = Prompt.ask("Enter chamber radius in meters")
+    chamber_radius = float(prompt)
+    g.generate_nozzle_geometry(chamber_radius)
